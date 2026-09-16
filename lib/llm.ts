@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { BlockKey, Brief, BriefInput, Field, SearchResult } from "./types";
 import { mockSummarize } from "./mock-llm";
+import { buildMeetingPrep } from "./meeting-prep";
 
 export const isLLMLive = () => Boolean(process.env.ANTHROPIC_API_KEY);
 
@@ -186,41 +187,55 @@ ${formatFragments("interests", resultsByBlock.interests)}
 
   const raw = toolUse.input as RawBrief;
 
+  const company = {
+    name: resolveField(raw.company.name, resultsByBlock.company),
+    industry: resolveField(raw.company.industry, resultsByBlock.company),
+    foundedDate: resolveField(raw.company.foundedDate, resultsByBlock.company),
+    registrationStatus: resolveField(
+      raw.company.registrationStatus,
+      resultsByBlock.company
+    ),
+  };
+  const tax = {
+    debtStatus: resolveField(raw.tax.debtStatus, resultsByBlock.tax),
+    taxRegime: resolveField(raw.tax.taxRegime, resultsByBlock.tax),
+  };
+  const decisionMaker = {
+    fullName: resolveField(raw.decisionMaker.fullName, resultsByBlock.decisionMaker),
+    position: resolveField(raw.decisionMaker.position, resultsByBlock.decisionMaker),
+    tenure: resolveField(raw.decisionMaker.tenure, resultsByBlock.decisionMaker),
+    responsibility: resolveField(
+      raw.decisionMaker.responsibility,
+      resultsByBlock.decisionMaker
+    ),
+  };
+  const serviceContext = {
+    summary: resolveField(raw.serviceContext.summary, resultsByBlock.serviceContext),
+  };
+  const interests = {
+    hobbies: resolveField(raw.interests.hobbies, resultsByBlock.interests),
+    publicAppearances: resolveField(
+      raw.interests.publicAppearances,
+      resultsByBlock.interests
+    ),
+    talkingPoints: resolveField(raw.interests.talkingPoints, resultsByBlock.interests),
+  };
+
   return {
     input,
     generatedAt: new Date().toISOString(),
-    company: {
-      name: resolveField(raw.company.name, resultsByBlock.company),
-      industry: resolveField(raw.company.industry, resultsByBlock.company),
-      foundedDate: resolveField(raw.company.foundedDate, resultsByBlock.company),
-      registrationStatus: resolveField(
-        raw.company.registrationStatus,
-        resultsByBlock.company
-      ),
-    },
-    tax: {
-      debtStatus: resolveField(raw.tax.debtStatus, resultsByBlock.tax),
-      taxRegime: resolveField(raw.tax.taxRegime, resultsByBlock.tax),
-    },
-    decisionMaker: {
-      fullName: resolveField(raw.decisionMaker.fullName, resultsByBlock.decisionMaker),
-      position: resolveField(raw.decisionMaker.position, resultsByBlock.decisionMaker),
-      tenure: resolveField(raw.decisionMaker.tenure, resultsByBlock.decisionMaker),
-      responsibility: resolveField(
-        raw.decisionMaker.responsibility,
-        resultsByBlock.decisionMaker
-      ),
-    },
-    serviceContext: {
-      summary: resolveField(raw.serviceContext.summary, resultsByBlock.serviceContext),
-    },
-    interests: {
-      hobbies: resolveField(raw.interests.hobbies, resultsByBlock.interests),
-      publicAppearances: resolveField(
-        raw.interests.publicAppearances,
-        resultsByBlock.interests
-      ),
-      talkingPoints: resolveField(raw.interests.talkingPoints, resultsByBlock.interests),
-    },
+    meetingPrep: buildMeetingPrep({
+      companyName: input.companyName,
+      company,
+      tax,
+      decisionMaker,
+      serviceContext,
+      interests,
+    }),
+    company,
+    tax,
+    decisionMaker,
+    serviceContext,
+    interests,
   };
 }

@@ -48,6 +48,36 @@ export function BriefCard({ brief }: { brief: Brief }) {
         </span>
       </div>
 
+      <section className="rounded-lg border border-teal-200 bg-teal-50 px-4 py-3 sm:px-5 sm:py-4">
+        <h3 className="mb-1 font-sans text-sm font-semibold text-teal-900">Коротко</h3>
+        <p className="text-sm text-slate-800">{brief.meetingPrep.summary}</p>
+
+        {brief.meetingPrep.stopFactors.length > 0 && (
+          <ul className="mt-2 flex flex-col gap-1">
+            {brief.meetingPrep.stopFactors.map((factor, i) => (
+              <li key={i} className="text-sm text-red-700">
+                ⚠ {factor}
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {brief.meetingPrep.suggestedQuestions.length > 0 && (
+          <div className="mt-2">
+            <p className="text-xs font-medium uppercase tracking-wide text-teal-800">
+              Вопросы для встречи
+            </p>
+            <ul className="mt-1 flex flex-col gap-1">
+              {brief.meetingPrep.suggestedQuestions.map((q, i) => (
+                <li key={i} className="text-sm text-slate-700">
+                  • {q}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </section>
+
       <BriefBlock title="1. Компания" warning={regIssue ? "проверить статус" : undefined}>
         <FieldRow label="Название" field={brief.company.name} />
         <FieldRow label="Сфера деятельности" field={brief.company.industry} />

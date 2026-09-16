@@ -1,5 +1,6 @@
 import { BlockKey, Brief, BriefInput, Field, SearchResult } from "./types";
 import { pseudoYear } from "./mock-search";
+import { buildMeetingPrep } from "./meeting-prep";
 
 function found(value: string, source: SearchResult): Field {
   return { value, found: true, source: { label: source.title, url: source.url } };
@@ -27,51 +28,63 @@ export function mockSummarize(
 
   const foundedYear = pseudoYear(companyName, 2008, 14);
 
+  const company = {
+    name: found(companyName, companySite),
+    industry: found("Предоставление услуг B2B-клиентам", companySite),
+    foundedDate: found(`${foundedYear} год`, companyRegistry),
+    registrationStatus: found("Действующее юридическое лицо", companyRegistry),
+  };
+  const tax = {
+    debtStatus: found("Задолженность отсутствует", taxStatus),
+    taxRegime: found("Общеустановленный порядок", taxStatus),
+  };
+  const decisionMaker = dmProfile
+    ? {
+        fullName: found(decisionMakerName as string, dmProfile),
+        position: found("Руководитель направления", dmProfile),
+        tenure: found(`С ${pseudoYear(decisionMakerName as string, 2018, 6)} года`, dmProfile),
+        responsibility: found(
+          "Операционное управление, работа с ключевыми партнёрами",
+          dmProfile
+        ),
+      }
+    : {
+        fullName: notFound(),
+        position: notFound(),
+        tenure: notFound(),
+        responsibility: notFound(),
+      };
+  const serviceContext = { summary: notFound() };
+  const interests = interestSource
+    ? {
+        hobbies: found("Горные лыжи", interestSource),
+        publicAppearances: found("Интервью деловому изданию", interestSource),
+        talkingPoints: found(
+          "Развитие локальных технологических стартапов",
+          interestSource
+        ),
+      }
+    : {
+        hobbies: notFound(),
+        publicAppearances: notFound(),
+        talkingPoints: notFound(),
+      };
+
   return {
     input,
     generatedAt: new Date().toISOString(),
-    company: {
-      name: found(companyName, companySite),
-      industry: found("Предоставление услуг B2B-клиентам", companySite),
-      foundedDate: found(`${foundedYear} год`, companyRegistry),
-      registrationStatus: found("Действующее юридическое лицо", companyRegistry),
-    },
-    tax: {
-      debtStatus: found("Задолженность отсутствует", taxStatus),
-      taxRegime: found("Общеустановленный порядок", taxStatus),
-    },
-    decisionMaker: dmProfile
-      ? {
-          fullName: found(decisionMakerName as string, dmProfile),
-          position: found("Руководитель направления", dmProfile),
-          tenure: found(`С ${pseudoYear(decisionMakerName as string, 2018, 6)} года`, dmProfile),
-          responsibility: found(
-            "Операционное управление, работа с ключевыми партнёрами",
-            dmProfile
-          ),
-        }
-      : {
-          fullName: notFound(),
-          position: notFound(),
-          tenure: notFound(),
-          responsibility: notFound(),
-        },
-    serviceContext: {
-      summary: notFound(),
-    },
-    interests: interestSource
-      ? {
-          hobbies: found("Горные лыжи", interestSource),
-          publicAppearances: found("Интервью деловому изданию", interestSource),
-          talkingPoints: found(
-            "Развитие локальных технологических стартапов",
-            interestSource
-          ),
-        }
-      : {
-          hobbies: notFound(),
-          publicAppearances: notFound(),
-          talkingPoints: notFound(),
-        },
+    meetingPrep: buildMeetingPrep({
+      companyName,
+      company,
+      tax,
+      decisionMaker,
+      serviceContext,
+      interests,
+    }),
+    company,
+    tax,
+    decisionMaker,
+    serviceContext,
+    interests,
   };
 }

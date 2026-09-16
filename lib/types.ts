@@ -44,9 +44,16 @@ export type InterestsBlock = {
   talkingPoints: Field;
 };
 
+export type MeetingPrep = {
+  summary: string;
+  stopFactors: string[];
+  suggestedQuestions: string[];
+};
+
 export type Brief = {
   input: BriefInput;
   generatedAt: string;
+  meetingPrep: MeetingPrep;
   company: CompanyBlock;
   tax: TaxBlock;
   decisionMaker: DecisionMakerBlock;
