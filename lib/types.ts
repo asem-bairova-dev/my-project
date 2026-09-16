@@ -44,10 +44,22 @@ export type InterestsBlock = {
   talkingPoints: Field;
 };
 
+export type RelatedCompany = {
+  name: string;
+  relation: string;
+  source?: Source;
+};
+
+export type RelatedCompaniesBlock = {
+  found: boolean;
+  companies: RelatedCompany[];
+};
+
 export type MeetingPrep = {
   summary: string;
   stopFactors: string[];
   suggestedQuestions: string[];
+  recommendations: string[];
 };
 
 export type Brief = {
@@ -59,6 +71,7 @@ export type Brief = {
   decisionMaker: DecisionMakerBlock;
   serviceContext: ServiceContextBlock;
   interests: InterestsBlock;
+  relatedCompanies: RelatedCompaniesBlock;
 };
 
 export type SearchResult = {
@@ -74,6 +87,7 @@ export const BLOCK_KEYS = [
   "decisionMaker",
   "serviceContext",
   "interests",
+  "relatedCompanies",
 ] as const;
 
 export type BlockKey = (typeof BLOCK_KEYS)[number];

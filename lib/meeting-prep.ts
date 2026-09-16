@@ -3,6 +3,7 @@ import {
   DecisionMakerBlock,
   InterestsBlock,
   MeetingPrep,
+  RelatedCompaniesBlock,
   ServiceContextBlock,
   TaxBlock,
 } from "./types";
@@ -19,8 +20,17 @@ export function buildMeetingPrep(brief: {
   decisionMaker: DecisionMakerBlock;
   serviceContext: ServiceContextBlock;
   interests: InterestsBlock;
+  relatedCompanies: RelatedCompaniesBlock;
 }): MeetingPrep {
-  const { companyName, company, tax, decisionMaker, serviceContext, interests } = brief;
+  const {
+    companyName,
+    company,
+    tax,
+    decisionMaker,
+    serviceContext,
+    interests,
+    relatedCompanies,
+  } = brief;
 
   const stopFactors: string[] = [];
   if (tax.debtStatus.found && !/отсутств/i.test(tax.debtStatus.value)) {
@@ -72,9 +82,38 @@ export function buildMeetingPrep(brief: {
     summaryParts.push(`Тема для small talk: ${talkingPoint}.`);
   }
 
+  const recommendations: string[] = [];
+  if (talkingPoint) {
+    recommendations.push(
+      `Откройте встречу с темы «${talkingPoint}» — установит контакт до перехода к делу.`
+    );
+  }
+  if (decisionMaker.responsibility.found) {
+    recommendations.push(
+      `Свяжите предложение с зоной ответственности ЛПР: ${decisionMaker.responsibility.value}.`
+    );
+  }
+  if (relatedCompanies.found) {
+    const names = relatedCompanies.companies.map((c) => c.name).join(", ");
+    recommendations.push(
+      `Уточните, не требует ли решение согласования на уровне группы компаний — найдены связанные структуры: ${names}.`
+    );
+  }
+  if (stopFactors.length > 0) {
+    recommendations.push(
+      "Прежде чем обсуждать условия сотрудничества, закройте отмеченные стоп-факторы — не стройте предложение поверх неподтверждённого статуса."
+    );
+  }
+  if (recommendations.length === 0) {
+    recommendations.push(
+      "Персонализированных зацепок пока мало — используйте стандартный деловой подход и собирайте недостающие факты по ходу встречи."
+    );
+  }
+
   return {
     summary: summaryParts.join(" "),
     stopFactors,
     suggestedQuestions,
+    recommendations,
   };
 }

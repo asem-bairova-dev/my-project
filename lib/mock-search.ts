@@ -60,6 +60,15 @@ export function mockSearch(
 
   const serviceContext: SearchResult[] = [];
 
+  const relatedCompanies: SearchResult[] = [
+    {
+      query: queriesByBlock.relatedCompanies[0],
+      title: `Аффилированные лица — ${companyName}`,
+      url: "https://kgd.gov.kz/ru/app/affiliated-persons",
+      content: `По данным реестра, учредитель ${companyName} также выступает учредителем компании «${companyName}-Сервис».`,
+    },
+  ];
+
   const interests: SearchResult[] = decisionMakerName
     ? [
         {
@@ -71,7 +80,7 @@ export function mockSearch(
       ]
     : [];
 
-  return { company, tax, decisionMaker, serviceContext, interests };
+  return { company, tax, decisionMaker, serviceContext, interests, relatedCompanies };
 }
 
 function slug(text: string): string {

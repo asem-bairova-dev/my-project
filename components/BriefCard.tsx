@@ -62,6 +62,21 @@ export function BriefCard({ brief }: { brief: Brief }) {
           </ul>
         )}
 
+        {brief.meetingPrep.recommendations.length > 0 && (
+          <div className="mt-2">
+            <p className="text-xs font-medium uppercase tracking-wide text-teal-800">
+              Как выстроить взаимодействие
+            </p>
+            <ul className="mt-1 flex flex-col gap-1">
+              {brief.meetingPrep.recommendations.map((r, i) => (
+                <li key={i} className="text-sm text-slate-700">
+                  → {r}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {brief.meetingPrep.suggestedQuestions.length > 0 && (
           <div className="mt-2">
             <p className="text-xs font-medium uppercase tracking-wide text-teal-800">
@@ -105,6 +120,33 @@ export function BriefCard({ brief }: { brief: Brief }) {
         <FieldRow label="Хобби" field={brief.interests.hobbies} />
         <FieldRow label="Публичные выступления" field={brief.interests.publicAppearances} />
         <FieldRow label="Темы для small talk" field={brief.interests.talkingPoints} />
+      </BriefBlock>
+
+      <BriefBlock title="6. Связанные компании">
+        {brief.relatedCompanies.found ? (
+          <ul className="flex flex-col divide-y divide-slate-100">
+            {brief.relatedCompanies.companies.map((c, i) => (
+              <li key={i} className="flex flex-col gap-0.5 py-2 first:pt-0 last:pb-0">
+                <div className="flex flex-wrap items-baseline gap-x-2">
+                  <span className="font-mono text-sm text-slate-900">{c.name}</span>
+                  <span className="text-xs text-slate-500">{c.relation}</span>
+                </div>
+                {c.source && (
+                  <a
+                    href={c.source.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-teal-700 underline decoration-teal-300 underline-offset-2 hover:text-teal-900"
+                  >
+                    {c.source.label || "источник"}
+                  </a>
+                )}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="py-2 font-mono text-sm italic text-slate-400">не найдено</p>
+        )}
       </BriefBlock>
     </div>
   );

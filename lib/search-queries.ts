@@ -28,5 +28,9 @@ export function buildQueries(input: BriefInput): Record<BlockKey, string[]> {
         ? `${decisionMakerName} интервью хобби конференция`
         : `${companyName} директор интервью деловые СМИ`,
     ],
+    relatedCompanies: [
+      `${companyName}${binPart} аффилированные лица учредитель другие компании`,
+      `${companyName} дочерняя компания ИЛИ материнская компания холдинг группа`,
+    ],
   };
 }

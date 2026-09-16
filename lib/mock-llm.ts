@@ -25,6 +25,7 @@ export function mockSummarize(
   const [taxStatus] = resultsByBlock.tax;
   const [dmProfile] = resultsByBlock.decisionMaker;
   const [interestSource] = resultsByBlock.interests;
+  const [affiliatedSource] = resultsByBlock.relatedCompanies;
 
   const foundedYear = pseudoYear(companyName, 2008, 14);
 
@@ -69,6 +70,18 @@ export function mockSummarize(
         publicAppearances: notFound(),
         talkingPoints: notFound(),
       };
+  const relatedCompanies = affiliatedSource
+    ? {
+        found: true,
+        companies: [
+          {
+            name: `«${companyName}-Сервис»`,
+            relation: "тот же учредитель",
+            source: { label: affiliatedSource.title, url: affiliatedSource.url },
+          },
+        ],
+      }
+    : { found: false, companies: [] };
 
   return {
     input,
@@ -80,11 +93,13 @@ export function mockSummarize(
       decisionMaker,
       serviceContext,
       interests,
+      relatedCompanies,
     }),
     company,
     tax,
     decisionMaker,
     serviceContext,
     interests,
+    relatedCompanies,
   };
 }

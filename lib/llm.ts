@@ -1,5 +1,12 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { BlockKey, Brief, BriefInput, Field, SearchResult } from "./types";
+import {
+  BlockKey,
+  Brief,
+  BriefInput,
+  Field,
+  RelatedCompaniesBlock,
+  SearchResult,
+} from "./types";
 import { mockSummarize } from "./mock-llm";
 import { buildMeetingPrep } from "./meeting-prep";
 
@@ -69,6 +76,32 @@ const briefToolSchema = {
         },
         required: ["hobbies", "publicAppearances", "talkingPoints"],
       },
+      relatedCompanies: {
+        type: "object",
+        properties: {
+          companies: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                name: { type: "string", description: "Название связанной компании." },
+                relation: {
+                  type: "string",
+                  description:
+                    "Как связана с целевой компанией: тот же учредитель/руководитель, дочерняя, материнская и т.п.",
+                },
+                sourceIndex: {
+                  type: ["integer", "null"],
+                  description:
+                    "1-based индекс фрагмента блока relatedCompanies, подтверждающего связь.",
+                },
+              },
+              required: ["name", "relation", "sourceIndex"],
+            },
+          },
+        },
+        required: ["companies"],
+      },
     },
     required: [
       "company",
@@ -76,6 +109,7 @@ const briefToolSchema = {
       "decisionMaker",
       "serviceContext",
       "interests",
+      "relatedCompanies",
     ],
   },
 };
@@ -101,6 +135,9 @@ type RawBrief = {
     publicAppearances: RawField;
     talkingPoints: RawField;
   };
+  relatedCompanies: {
+    companies: { name: string; relation: string; sourceIndex: number | null }[];
+  };
 };
 
 function resolveField(raw: RawField, sources: SearchResult[]): Field {
@@ -118,6 +155,23 @@ function resolveField(raw: RawField, sources: SearchResult[]): Field {
     found: true,
     source: { label: source.title, url: source.url },
   };
+}
+
+function resolveRelatedCompanies(
+  raw: RawBrief["relatedCompanies"],
+  sources: SearchResult[]
+): RelatedCompaniesBlock {
+  const companies = raw.companies
+    .map((c) => {
+      const idx = c.sourceIndex != null ? c.sourceIndex - 1 : -1;
+      const source = idx >= 0 && idx < sources.length ? sources[idx] : undefined;
+      // Anti-hallucination guard: drop any entry that doesn't point at a real fragment.
+      if (!source) return null;
+      return { name: c.name, relation: c.relation, source: { label: source.title, url: source.url } };
+    })
+    .filter((c): c is NonNullable<typeof c> => c !== null);
+
+  return { found: companies.length > 0, companies };
 }
 
 function formatFragments(block: BlockKey, results: SearchResult[]): string {
@@ -166,6 +220,11 @@ ${formatFragments("serviceContext", resultsByBlock.serviceContext)}
 
 === Блок "Интересы ЛПР" ===
 ${formatFragments("interests", resultsByBlock.interests)}
+
+=== Блок "Связанные компании" ===
+${formatFragments("relatedCompanies", resultsByBlock.relatedCompanies)}
+
+Для блока "Связанные компании" перечисли только компании, явно упомянутые во фрагментах как аффилированные, дочерние, материнские или связанные тем же учредителем/руководителем. Если фрагментов нет или связи не подтверждены — верни пустой список companies.
 
 Вызови emit_brief с заполненной структурой.`;
 
@@ -220,6 +279,10 @@ ${formatFragments("interests", resultsByBlock.interests)}
     ),
     talkingPoints: resolveField(raw.interests.talkingPoints, resultsByBlock.interests),
   };
+  const relatedCompanies = resolveRelatedCompanies(
+    raw.relatedCompanies,
+    resultsByBlock.relatedCompanies
+  );
 
   return {
     input,
@@ -231,11 +294,13 @@ ${formatFragments("interests", resultsByBlock.interests)}
       decisionMaker,
       serviceContext,
       interests,
+      relatedCompanies,
     }),
     company,
     tax,
     decisionMaker,
     serviceContext,
     interests,
+    relatedCompanies,
   };
 }
