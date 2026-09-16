@@ -1,36 +1,36 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Клиентский брифинг
 
-## Getting Started
+MVP по [prd.md](../prd.md): карточка-справка по клиенту перед выездом на встречу — ввод компании → веб-поиск по 5 блокам → LLM-суммаризация с честным «не найдено» → карточка + чек-лист готовности.
 
-First, run the development server:
+## Запуск
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Открыть [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Реальные данные vs демо-режим
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Без API-ключей проект работает на детерминированных моках (и поиск, и LLM-суммаризация) — это видно по жёлтому баннеру «Демо-режим» над карточкой. Чтобы подключить реальный сбор данных, скопировать `.env.example` в `.env.local` и заполнить:
 
-## Learn More
+- `TAVILY_API_KEY` — веб-поиск ([tavily.com](https://tavily.com)).
+- `ANTHROPIC_API_KEY` — LLM-суммаризация фрагментов по блокам (Claude, через tool-use для строгого JSON и защиты от галлюцинаций источников).
 
-To learn more about Next.js, take a look at the following resources:
+Каждый ключ подключается независимо: можно, например, включить только реальный поиск, оставив LLM на моке.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Структура
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `lib/types.ts` — модель карточки (5 блоков, каждое поле — `{ value, found, source }`).
+- `lib/search-queries.ts` — генерация поисковых запросов по блокам из PRD (раздел 6.2).
+- `lib/search.ts` / `lib/mock-search.ts` — веб-поиск (Tavily или мок).
+- `lib/llm.ts` / `lib/mock-llm.ts` — суммаризация фрагментов в карточку (Claude или мок).
+- `app/api/brief/route.ts` — единственный API-роут: вход → поиск → суммаризация → карточка.
+- `components/BriefCard.tsx`, `components/FieldRow.tsx`, `components/Checklist.tsx` — вывод.
 
-## Deploy on Vercel
+## Известные ограничения MVP (см. раздел 9, 11 PRD)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Нет истории карточек и экспорта в PDF — не входит в MVP.
+- Блок «Контекст обслуживания» изначально скуднее остальных — это ожидаемо по PRD, не баг.
+- Суммы налогов не показываются — только бинарный статус задолженности, честно по разделу 9.
